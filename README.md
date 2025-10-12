@@ -19,4 +19,4 @@ The `readonly_user` has a query timeout of 250ms to prevent DoS.
 
 ## Public Instance
 
-A best-effort instance is hosted at `postgres://readonly_user:readonly_password@132.145.199.149:5432/atpg`. If this gets DoSed it will probably be turned offline.
+A best-effort instance is hosted at `postgres://readonly_user:readonly_password@132.145.199.149:25432/atpg`. If this gets DoSed it will probably be turned offline.
