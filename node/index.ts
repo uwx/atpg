@@ -34,7 +34,7 @@ setInterval(() => {
         external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
     };
 
-    console.log('Memory usage:', inspect(memoryUsage, {colors: true, depth: 5}));
+    console.log('Memory usage:', inspect(memoryUsage, {colors: false, depth: 5}));
 }, 30_000);
 
 jetstream.on('error', (error) => {
