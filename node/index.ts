@@ -55,34 +55,19 @@ jetstream.on('commit', async ({ commit, did }) => {
         // console.log('Processing commit:', commit, 'for DID:', did);
         switch (commit.operation) {
             case 'create':
-                client.execute('insert_record',
-                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)],
-                    (err) => {
-                        if (err) {
-                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
-                        }
-                    }
+                client.executeSync('insert_record',
+                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)]
                 );
             case 'update':
                 // note: this will throw if the original record does not exist in the database. i need to figure out
                 // a clean solution to upsert
-                client.execute('update_record',
-                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)],
-                    (err) => {
-                        if (err) {
-                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
-                        }
-                    }
+                client.executeSync('update_record',
+                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)]
                 );
                 break;
             case 'delete':
-                client.execute('delete_record',
-                    [commit.rkey, commit.collection, did],
-                    (err) => {
-                        if (err) {
-                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
-                        }
-                    }
+                client.executeSync('delete_record',
+                    [commit.rkey, commit.collection, did]
                 );
                 break;
         }
