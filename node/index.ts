@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { Jetstream } from "@skyware/jetstream";
+import { inspect } from 'node:util';
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -19,7 +20,21 @@ setTimeout(() => {
 }, 10000); // wait 10 seconds for the database to be ready
 
 setInterval(() => {
-    console.log(`Cursor: ${jetstream.cursor}`)
+    console.log(`Cursor: ${jetstream.cursor}`);
+
+    // https://stackoverflow.com/a/64550489
+    const formatMemoryUsage = (data: number) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
+
+    const memoryData = process.memoryUsage();
+
+    const memoryUsage = {
+        rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+        heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+        heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+        external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+    };
+
+    console.log('Memory usage:', inspect(memoryUsage, {colors: true, depth: 5}));
 }, 30_000);
 
 jetstream.on('error', (error) => {
