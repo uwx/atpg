@@ -9,11 +9,12 @@ RUN apt-get update \
 # Install pnpm globally
 RUN npm install -g pnpm
 
-COPY package*.json ./
-RUN pnpm install
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install --ignore-scripts=false --unsafe-perm
 
 COPY . .
 
-EXPOSE 3000
+# EXPOSE 3000
 
 CMD ["pnpm", "run", "dev"]
