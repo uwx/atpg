@@ -5,7 +5,7 @@ set -e
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     -- Create the parent table
     CREATE TABLE IF NOT EXISTS atproto_records (
-        did VARCHAR(255) NOT NULL,
+        did VARCHAR(255) NOT NULL,  
         rkey VARCHAR(255) NOT NULL,
         nsid VARCHAR(255) NOT NULL,
         cid VARCHAR(255) NOT NULL,
@@ -40,4 +40,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT USAGE ON SCHEMA public TO readonly_user;
     GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
     -- ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readonly_user;
+
+    ALTER ROLE readonly_user SET statement_timeout = '250ms';
 EOSQL
