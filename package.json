@@ -1,5 +1,0 @@
-{
-	"dependencies": {
-		"pg-native": "^3.5.2"
-	}
-}
