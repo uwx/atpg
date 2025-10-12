@@ -3,6 +3,8 @@ import { Jetstream } from "@skyware/jetstream";
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    max: 100,
+    min: 1,
 });
 
 const date24HoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -12,7 +14,9 @@ const jetstream = new Jetstream({
     maxMessageSizeBytes: 2_097_152 // 2 MB
 });
 
-jetstream.start();
+setTimeout(() => {
+    jetstream.start();
+}, 10000); // wait 10 seconds for the database to be ready
 
 setInterval(() => {
     console.log(`Cursor: ${jetstream.cursor}`)
