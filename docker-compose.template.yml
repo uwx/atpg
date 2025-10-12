@@ -18,8 +18,6 @@ services:
       DATABASE_URL: postgres://user:pass@db:5432/mydb
     depends_on:
       - db
-    ports:
-      - "3000:3000"
     volumes:
       - ./node:/usr/src/app
     command: pnpm run dev
