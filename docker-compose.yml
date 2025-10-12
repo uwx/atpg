@@ -1,0 +1,28 @@
+services:
+  db:
+    build: ./db
+    environment:
+      POSTGRES_USER: 5qIOzUclOTd3pilJ
+      POSTGRES_PASSWORD: AwDET85q6lFVkpaz
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+  
+  node:
+    build: ./node
+    environment:
+      DATABASE_URL: postgres://5qIOzUclOTd3pilJ:AwDET85q6lFVkpaz@db:5432/mydb
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node:/usr/src/app
+    command: pnpm run dev
+
+volumes:
+  db_data:
