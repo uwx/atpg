@@ -4,7 +4,7 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
-        "dev": "tsx watch index.ts"
+        "dev": "pnpm dlx tsx watch index.ts"
     },
     "dependencies": {
         "@skyware/jetstream": "^0.2.5",
