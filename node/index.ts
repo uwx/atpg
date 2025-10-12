@@ -26,25 +26,27 @@ const jetstream = new Jetstream({
 
 setTimeout(() => {
     jetstream.start();
+    console.log('Jetstream started from cursor:', jetstream.cursor);
+
+    setInterval(() => {
+        console.log(`${new Date()} cursor: ${new Date((jetstream.cursor ?? 0) / 1000)}`);
+
+        // https://stackoverflow.com/a/64550489
+        const formatMemoryUsage = (data: number) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
+
+        const memoryData = process.memoryUsage();
+
+        const memoryUsage = {
+            rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+            heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+            heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+            external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+        };
+
+        console.log('Memory usage:', inspect(memoryUsage, { colors: false, depth: 5 }));
+    }, 5_000);
+
 }, 10000); // wait 10 seconds for the database to be ready
-
-setInterval(() => {
-    console.log(`${new Date().toISOString()} cursor: ${jetstream.cursor}`);
-
-    // https://stackoverflow.com/a/64550489
-    const formatMemoryUsage = (data: number) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
-
-    const memoryData = process.memoryUsage();
-
-    const memoryUsage = {
-        rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
-        heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
-        heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
-        external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
-    };
-
-    console.log('Memory usage:', inspect(memoryUsage, { colors: false, depth: 5 }));
-}, 5_000);
 
 jetstream.on('error', (error) => {
     console.error('Jetstream error:', error, 'at cursor:', jetstream.cursor);
