@@ -9,7 +9,7 @@ RUN apt-get update \
 # Install pnpm globally
 RUN npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 RUN pnpm install --ignore-scripts=false --unsafe-perm
 
