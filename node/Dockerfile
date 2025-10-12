@@ -2,6 +2,10 @@ FROM node:22
 
 WORKDIR /usr/src/app
 
+RUN apt-get update \
+  && apt-get install -y libpq-dev g++ make \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install pnpm globally
 RUN npm install -g pnpm
 

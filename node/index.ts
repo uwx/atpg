@@ -1,12 +1,21 @@
-import { Pool } from 'pg';
+import Client from 'pg-native';
 import { Jetstream } from "@skyware/jetstream";
 import { inspect } from 'node:util';
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 100,
-    min: 1,
-});
+const client = new Client();
+client.connectSync(process.env.DATABASE_URL!);
+client.prepareSync('insert_record', /*sql*/`
+    INSERT INTO atproto_records (
+        did, rkey, nsid, cid, record, indexed_at, updated_at
+    ) VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())
+        ON CONFLICT DO NOTHING;`, 5);
+client.prepareSync('update_record', /*sql*/`
+    UPDATE atproto_records
+        SET did = $1, rkey = $2, nsid = $3, cid = $4, record = $5::jsonb, updated_at = NOW()
+        WHERE rkey = $2 AND nsid = $3 AND did = $1;`, 5);
+client.prepareSync('delete_record', /*sql*/`
+    DELETE FROM atproto_records
+        WHERE rkey = $1 AND nsid = $2 AND did = $3;`, 3);
 
 const date24HoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -20,7 +29,7 @@ setTimeout(() => {
 }, 10000); // wait 10 seconds for the database to be ready
 
 setInterval(() => {
-    console.log(`Cursor: ${jetstream.cursor}`);
+    console.log(`${new Date().toISOString()} cursor: ${jetstream.cursor}`);
 
     // https://stackoverflow.com/a/64550489
     const formatMemoryUsage = (data: number) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
@@ -34,40 +43,46 @@ setInterval(() => {
         external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
     };
 
-    console.log('Memory usage:', inspect(memoryUsage, {colors: false, depth: 5}));
-}, 30_000);
+    console.log('Memory usage:', inspect(memoryUsage, { colors: false, depth: 5 }));
+}, 5_000);
 
 jetstream.on('error', (error) => {
     console.error('Jetstream error:', error, 'at cursor:', jetstream.cursor);
 });
 
-jetstream.on('commit', async ({commit, did}) => {
+jetstream.on('commit', async ({ commit, did }) => {
     try {
         // console.log('Processing commit:', commit, 'for DID:', did);
         switch (commit.operation) {
             case 'create':
-                await pool.query(/*sql*/`
-                INSERT INTO atproto_records (
-                    did, rkey, nsid, cid, record, indexed_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5::jsonb, NOW(), NOW())
-                    ON CONFLICT DO NOTHING;`,
-                [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)]
+                client.execute('insert_record',
+                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)],
+                    (err) => {
+                        if (err) {
+                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
+                        }
+                    }
                 );
             case 'update':
                 // note: this will throw if the original record does not exist in the database. i need to figure out
-                // a clean solution to upsert 
-                await pool.query(/*sql*/`
-                UPDATE atproto_records
-                    SET did = $1, rkey = $2, nsid = $3, cid = $4, record = $5::jsonb, updated_at = NOW()
-                    WHERE rkey = $2 AND nsid = $3 AND did = $1;`,
-                [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)]
+                // a clean solution to upsert
+                client.execute('update_record',
+                    [did, commit.rkey, commit.collection, commit.cid, JSON.stringify(commit.record)],
+                    (err) => {
+                        if (err) {
+                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
+                        }
+                    }
                 );
                 break;
             case 'delete':
-                await pool.query(/*sql*/`
-                DELETE FROM atproto_records
-                    WHERE rkey = $1 AND nsid = $2 AND did = $3;`,
-                [commit.rkey, commit.collection, did]
+                client.execute('delete_record',
+                    [commit.rkey, commit.collection, did],
+                    (err) => {
+                        if (err) {
+                            console.error('Error inserting record:', err, 'at cursor:', jetstream.cursor);
+                        }
+                    }
                 );
                 break;
         }

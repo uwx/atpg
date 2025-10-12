@@ -15,7 +15,7 @@ services:
   node:
     build: ./node
     environment:
-      DATABASE_URL: postgres://user:pass@db:5432/mydb
+      DATABASE_URL: postgresql://user:pass@db:5432/mydb
     depends_on:
       - db
     volumes:
